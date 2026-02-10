@@ -224,11 +224,12 @@
 
             /* Table Sizing */
             table {
-                width: 100%;
+                width: 100% !important;
+                min-width: 0 !important;
                 border-collapse: collapse;
                 border: 1px solid #ddd;
-                font-size: 11pt;
-                /* Readable but compact */
+                font-size: 10pt;
+                /* Slightly smaller for better fit */
                 table-layout: fixed;
                 /* Force table to respect width */
             }
@@ -301,7 +302,7 @@
                     </div>
                     <div class="form-control">
                         <label for="meterFee">رسوم العداد (ريال) - اختياري</label>
-                        <input type="number" step="0.01" id="meterFee" min="0" value="0" placeholder="مثال: 10.00"
+                        <input type="number" step="0.01" id="meterFee" min="0" value="" placeholder="مثال: 10.00"
                             onchange="calculatePreview()">
                     </div>
                 </div>
