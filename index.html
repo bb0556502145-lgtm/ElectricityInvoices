@@ -312,7 +312,7 @@
                     <div style="display: flex; justify-content: space-between;">
                         <span style="font-weight: bold; color: var(--secondary-color);">الاستهلاك المتوقع: <span
                                 id="usagePreview">0.00</span> ك.و.س</span>
-                        <span style="font-size: 0.9rem; color: #666;">(سعر الوحدة: 0.18 هللة)</span>
+                        <span style="font-size: 0.9rem; color: #666;" id="ratePreview">(سعر الوحدة: 0.18 هللة)</span>
                     </div>
                     <div
                         style="display: flex; justify-content: space-between; border-top: 1px solid #ddd; padding-top: 10px;">
@@ -383,8 +383,22 @@
         const printArea = document.getElementById('printArea');
 
         // Configuration
-        const RATE = 0.18;
+        const RATE_1 = 0.18;
+        const RATE_2 = 0.30;
+        const LIMIT_1 = 6000;
         const VAT_RATE = 0.15;
+
+        // Helper: Calculate Cost with Dynamic Rate
+        function calculateCost(usage) {
+            let rate = RATE_1;
+
+            if (usage > LIMIT_1) {
+                rate = RATE_2;
+            }
+
+            const cost = usage * rate;
+            return { cost, rate };
+        }
 
         // Initial Render
         renderBills();
@@ -401,7 +415,7 @@
             // Round usage to 2 decimals
             usage = parseFloat(usage.toFixed(2));
 
-            const cost = usage * RATE;
+            const { cost, rate } = calculateCost(usage);
             const subtotal = cost + fee;
             const vat = subtotal * VAT_RATE;
             const total = subtotal + vat;
@@ -410,6 +424,10 @@
             document.getElementById('subtotalPreview').textContent = subtotal.toFixed(2);
             document.getElementById('vatPreview').textContent = vat.toFixed(2);
             document.getElementById('totalPreview').textContent = total.toFixed(2);
+
+            // Update Rate Text
+            const rateSpan = document.getElementById('ratePreview');
+            rateSpan.textContent = `(سعر الوحدة: ${rate.toFixed(2)} ريال)`;
         }
 
         // Add Bill
@@ -430,7 +448,7 @@
             let usage = curr - prev;
             usage = parseFloat(usage.toFixed(2));
 
-            const cost = usage * RATE;
+            const { cost, rate } = calculateCost(usage);
             const subtotal = cost + fee;
             const vat = subtotal * VAT_RATE;
             const total = subtotal + vat;
@@ -443,6 +461,7 @@
                 prev,
                 curr,
                 usage,
+                rate,
                 fee,
                 vat,
                 total
@@ -507,15 +526,26 @@
             const bill = bills.find(b => b.id === id);
             if (!bill) return;
 
+            // Recalculate cost/rate if missing (compatibility)
+            let rate = bill.rate;
+            let cost = 0;
+
+            if (!rate) {
+                const result = calculateCost(bill.usage);
+                rate = result.rate;
+                cost = result.cost;
+            } else {
+                cost = bill.usage * rate;
+            }
+
             const vat = bill.vat || 0;
-            const cost = (bill.usage * RATE);
             const subtotal = cost + bill.fee;
 
             const printContent = `
                 <div style="text-align: center; margin-bottom: 20px;">
                     <h2>فاتورة كهرباء</h2>
                     <p>التاريخ: ${bill.date}</p>
-                    <p style="font-size: 0.8rem; color: #666;">رقم الفاتورة: #${bill.id}</p>
+                   
                 </div>
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                     <tr>
@@ -542,7 +572,7 @@
                     </tr>
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;">سعر الوحدة</td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${RATE} ريال</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${rate.toFixed(2)} ريال</td>
                     </tr>
                      <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;">قيمة الاستهلاك</td>
@@ -594,6 +624,9 @@
 
             // Data
             bills.forEach(bill => {
+                // Ensure rate is available (legacy support)
+                const rate = bill.rate || calculateCost(bill.usage).rate;
+
                 const row = [
                     bill.date,
                     `"${bill.tenant}"`, // Quote strings to handle commas
@@ -601,7 +634,7 @@
                     bill.prev,
                     bill.curr,
                     bill.usage,
-                    RATE,
+                    (rate || 0).toFixed(2),
                     bill.fee,
                     (bill.vat || 0).toFixed(2),
                     bill.total.toFixed(2)
