@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>حساب فاتورة الكهرباء</title>
+    <link rel="apple-touch-icon" href="./ele.png">
+    <link rel="icon" type="image/png" href="./ele.png">
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -287,6 +290,10 @@
                         <label for="aptNumber">رقم الشقة</label>
                         <input type="text" id="aptNumber" placeholder="مثال: 101" required>
                     </div>
+                    <div class="form-control">
+                        <label for="meterAccount">رقم حساب العداد</label>
+                        <input type="text" id="meterAccount" placeholder="مثال: 10002345678" required>
+                    </div>
                 </div>
 
                 <div class="input-group">
@@ -350,6 +357,7 @@
                             <th>التاريخ</th>
                             <th>المستأجر</th>
                             <th>الشقة</th>
+                            <th>رقم الحساب</th>
                             <th>ق. سابقة</th>
                             <th>ق. حالية</th>
                             <th>استهلاك</th>
@@ -436,6 +444,7 @@
 
             const tenant = document.getElementById('tenantName').value;
             const apartment = document.getElementById('aptNumber').value;
+            const meterAccount = document.getElementById('meterAccount').value;
             const prev = parseFloat(document.getElementById('prevReading').value);
             const curr = parseFloat(document.getElementById('currReading').value);
             const fee = parseFloat(document.getElementById('meterFee').value) || 0;
@@ -458,6 +467,7 @@
                 date: new Date().toLocaleDateString('en-GB'),
                 tenant,
                 apartment,
+                meterAccount,
                 prev,
                 curr,
                 usage,
@@ -498,6 +508,7 @@
                     <td>${bill.date}</td>
                     <td>${bill.tenant}</td>
                     <td>${bill.apartment}</td>
+                    <td>${bill.meterAccount || '-'}</td>
                     <td>${bill.prev}</td>
                     <td>${bill.curr}</td>
                     <td>${bill.usage.toFixed(2)}</td>
@@ -551,6 +562,9 @@
                     <tr>
                         <td style="padding: 10px; border: 1px solid #ddd; width: 50%;"><strong>اسم المستأجر:</strong> ${bill.tenant}</td>
                         <td style="padding: 10px; border: 1px solid #ddd; width: 50%;"><strong>رقم الشقة:</strong> ${bill.apartment}</td>
+                    </tr>
+                    <tr>
+                         <td colspan="2" style="padding: 10px; border: 1px solid #ddd; width: 100%;"><strong>رقم حساب العداد:</strong> ${bill.meterAccount || '-'}</td>
                     </tr>
                 </table>
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
@@ -620,7 +634,7 @@
             let csvContent = "\uFEFF";
 
             // Headers
-            csvContent += "التاريخ,اسم المستأجر,رقم الشقة,القراءة السابقة,القراءة الحالية,الاستهلاك,سعر الوحدة,الرسوم,الضريبة,الإجمالي\n";
+            csvContent += "التاريخ,اسم المستأجر,رقم الشقة,رقم حساب العداد,القراءة السابقة,القراءة الحالية,الاستهلاك,سعر الوحدة,الرسوم,الضريبة,الإجمالي\n";
 
             // Data
             bills.forEach(bill => {
@@ -631,6 +645,7 @@
                     bill.date,
                     `"${bill.tenant}"`, // Quote strings to handle commas
                     `"${bill.apartment}"`,
+                    `"${bill.meterAccount || ''}"`,
                     bill.prev,
                     bill.curr,
                     bill.usage,
